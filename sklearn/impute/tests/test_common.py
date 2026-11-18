@@ -180,6 +180,28 @@ def test_keep_empty_features(imputer, keep_empty_features):
             assert X_imputed.shape == (X.shape[0], X.shape[1] - 1)
 
 
+@pytest.mark.parametrize("add_indicator", [True, False])
+@pytest.mark.parametrize("keep_empty_features", [True, False])
+@pytest.mark.parametrize("imputer", imputers(), ids=lambda x: x.__class__.__name__)
+def test_keep_empty_features_feature_names_out(
+    imputer, keep_empty_features, add_indicator
+):
+    """Check that `get_feature_names_out` matches the output of `transform` when
+    some features contain only missing values."""
+    X = np.array([[np.nan, 1, np.nan], [np.nan, 2, 3], [np.nan, 3, 4]])
+    imputer = clone(imputer).set_params(
+        add_indicator=add_indicator, keep_empty_features=keep_empty_features
+    )
+    X_imputed = imputer.fit_transform(X)
+    names = imputer.get_feature_names_out()
+
+    expected_names = ["x0", "x1", "x2"] if keep_empty_features else ["x1", "x2"]
+    if add_indicator:
+        expected_names += ["missingindicator_x0", "missingindicator_x2"]
+    assert_array_equal(names, expected_names)
+    assert X_imputed.shape[1] == len(names)
+
+
 @pytest.mark.parametrize("imputer", imputers(), ids=lambda x: x.__class__.__name__)
 @pytest.mark.parametrize("missing_value_test", [np.nan, 1])
 def test_imputation_adds_missing_indicator_if_add_indicator_is_true(

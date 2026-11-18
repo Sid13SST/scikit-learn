@@ -403,5 +403,8 @@ class KNNImputer(_BaseImputer):
         """
         check_is_fitted(self, "n_features_in_")
         input_features = _check_feature_names_in(self, input_features)
-        names = input_features[self._valid_mask]
+        if self.keep_empty_features:
+            names = input_features
+        else:
+            names = input_features[self._valid_mask]
         return self._concatenate_indicator_feature_names_out(names, input_features)
